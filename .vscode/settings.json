@@ -1,0 +1,7 @@
+{
+    "objectscript.conn": {
+        "server": "iris-dev",
+        "ns": "LAB_MGOSSELI",
+        "active": true
+    }
+}
