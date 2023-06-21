@@ -1,4 +1,44 @@
 {
+    // Settings-Modified
+     // Added configuration to connect cache server, Export Classes and Routines based on extension and to maintain the existing folder structure.
+      "intersystems.servers": {
+        "iris-dev": {
+            "webServer": {
+                "scheme": "http",
+                "host": "qdlsq1963.us.qdx.com",
+                "port": 57773
+            },
+            "description": "QDIBDEV",
+            "username": "michael.x.gosselin"
+        },
+        "/default": "iris-dev",
+    },
+    "git.autofetch": true,
+    "terminal.Integrated.defaultProfile.windows": "Git Bash",
+    "objectscript.autoPreviewXML": true,
+    "objectscript.export": {
+        "folder": "Source",
+        "addCategory": {
+            "(((U[T|t])|(IM)).*(.cls|.mac))": "Utilities",
+            "cls": "Classes",
+            "mac": "Routines",
+            "inc": "Includes",
+            "int": "Routines",
+            "GBL": "Globals"
+
+        },        
+        "map": {},
+        "atelier": true,
+        "generated": true,
+        "filter": "",
+        "noStorage": false,
+        "dontExportIfNoChanges": false,
+        "maxConcurrentConnections": 0
+    },
+    "objectscript.serverSideEditing": true,
+    "workbench.colorTheme": "InterSystems Default Dark",
+    "explorer.compactFolders": false,
+    
     "objectscript.conn": {
         "server": "iris-dev",
         "ns": "LAB_MGOSSELI",
