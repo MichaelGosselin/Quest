@@ -1,0 +1,142 @@
+ROUTINE zmjg
+zmjg ; test      
+	q
+tamr ;
+	;
+	s fn="/usr/public2/AthenaTAMRHistory2.txt",tab=$c(9)
+	o fn:"R"
+	s $zt="close"
+	f  d
+	. u fn r x
+	. s %DS=$p(x,tab) d INT^%DI q:%DN=-1
+	. s p=##class(LabOps.TAMRHistory).%New()
+	. s p.INDT=%DN
+	. s p.TotalCycles=+$p(x,tab,2),p.TotalHolds=+$p(x,tab,3) ;,p.ReportTotal=$p(x,tab,4)
+	. s sc=p.%Save()
+	. i sc=1 u 0 w ","
+	. e  d DisplayError^%apiOBJ(sc)
+	. s sc=p.%Close()
+	. i sc'=1 w !,sc
+	;
+close ;
+	// test
+	c fn
+	q
+	;
+zpos ;
+	;
+	F H=+$H D
+	. S MSG="",G=$NA(^ZRE("UC",H))
+	. S YR=$ZD(H),M=+YR,YR=$P(YR,"/",3)
+	. I $L(YR)=2 S YR=$S(H<58073:19,1:20)_YR
+	. S UC320=""
+	. S UC=0
+	. F UC=707,708,731:1:735 S UC=$O(@G@(UC)) Q:'UC  D
+	. . S COMM=$G(^ZPOSQ("COMMENTS",UC))
+	. . Q:COMM=""
+	. . S S4=""
+	. . F  S S4=$O(@G@(UC,S4)) Q:S4=""  D
+	. . . S S5=""
+	. . . F  S S5=$O(@G@(UC,S4,S5)) Q:S5=""  D
+	. . . . S ACN=""
+	. . . . F  S ACN=$O(@G@(UC,S4,S5,ACN)) Q:ACN=""  D
+	. . . . . w $j(ACN,10)
+	. . . . . I $E(ACN,1,2)'=$E(YR,3,4) Q  ; OLD ACCESSION
+	. . . . . I '$D(^PARES(ACN,COMM,"M")) S ^ZIS("NO_COMMENTS",ACN)=COMM
+	. . . . . S DOC=$$FINDDOC^ZFINDPOS(ACN)
+	. . . . . I DOC="",((UC=707)!(UC=708)!(UC=731)!(UC=733)!(UC=735)) S DOC=" "
+	. . . . . I DOC="" Q  ; NO DOCTOR - NO TRACKING
+	. . . . . ;
+	. . . . . S ^ZPOSQ("POS","A",ACN,"UC",UC)=MSG
+	. . . . . S ^ZPOSQ("POS","A",ACN,"LOG",H)=""
+	. . . . . S ^ZPOSQ("POS","A",ACN)=DOC
+	. . . . . S CL=$$CLINUM^ZPTFILE(ACN)
+	. . . . . S:CL]"" ^ZPOSQ("POS","CLIENT",CL,ACN)=""
+	. . . . . S ^ZPOSQ("POS","XDT",H,ACN)=""
+	q
+	;
+zh	S LOG=64133
+	K HIPAA
+	S DT=LOG-1,(TM,ID,OPT)=""
+	F  S DT=$O(^ZHIPAA(DT)) Q:DT>64135  D
+	. F  S TM=$O(^ZHIPAA(DT,TM)) Q:TM=""  D
+	. . F  S ID=$O(^ZHIPAA(DT,TM,ID)) Q:ID=""  D
+	. . . F  S OPT=$O(^ZHIPAA(DT,TM,ID,OPT)) Q:OPT=""  D
+	. . . . ; I '$D(^ZHIPAA(DT,TM,ID,OPT,ACN)) Q
+	. . . . ;W $$STM^%ZD(DT_","_TM),?25,"ID = ",ID,?35,"Option = ",OPT,!
+	. . . . S HIPAA(DT,TM,"LAB",ID,OPT)=""
+	;
+	; HIPAA from defined variable
+	;
+	m ^zis("hipaa",2)=HIPAA
+	D ^%ZIO
+	Q:%IOD="//"
+	S TAB=$C(9),SELF=(%IOD=%PIO)
+	U:'SELF %IOD
+	W "<HTML>"
+	W "<HEAD>"
+	W "<TITLE>"
+	; W "Accession ",ACN," log"
+	W "</TITLE>"
+	W "<BODY>"
+	w "<TABLE border=8>",!
+	w "<tr>"
+	W "<td><b>Date</b></td>"
+	W "<td><b>Time</b></td>"
+	W "<td><b>Application</b></td>"
+	W "<td><b>Who</b></td>"
+	W "<td><b>Action</b></td>"
+	w "</tr>"
+	;g end
+	S DT=""
+	F  S DT=$O(HIPAA(DT)) Q:DT=""  S DATE=$ZD(DT) D
+	. S TM=""
+	. F  S TM=$O(HIPAA(DT,TM)) Q:TM=""  D
+	. . S TIME=$$TIME(TM)
+	. . S APP=""
+	. . F  S APP=$O(HIPAA(DT,TM,APP)) Q:APP=""  D
+	. . . S WHO=""
+	. . . F  S WHO=$O(HIPAA(DT,TM,APP,WHO)) Q:WHO=""  D
+	. . . . I WHO="*" Q
+	. . . . S WHAT=""
+	. . . . F  S WHAT=$O(HIPAA(DT,TM,APP,WHO,WHAT)) Q:WHAT=""  D
+	. . . . . ;B
+	. . . . . S Z=WHAT
+	. . . . . I APP="LAB" D
+	. . . . . . I $TR(WHAT,",")?1N.N X "S Z=$P(^MENU("_WHAT_"),""]"")"
+	. . . . . . I $TR(WHAT,",")?1"FI3"1N.N D
+	. . . . . . . S LINE="""FI3"""_$P(WHAT,"FI3",2) X "S Z=$P(^[""FIN""]MENU("_LINE_"),""]"")"
+	. . . . . W "<tr align=center>"
+	. . . . . w "<td>",DATE,"</td>"
+	. . . . . W "<td>",TIME,"</td>"
+	. . . . . W "<td>",APP,"</td>"
+	. . . . . W "<td>",WHO,"</td>"
+	. . . . . W "<td>",Z,"</td>"
+	. . . . . w "</tr>"
+end w "</TABLE>"
+	W "</BODY>"
+	W "</HTML>"
+	c %IOD
+	Q
+	;
+TIME(TM) ;
+	S HR=TM\3600,MIN=TM#3600\60
+	I HR<12 Q HR_":"_MIN_" AM"
+	I HR>12 Q (HR-12)_":"_MIN_" PM"
+	Q HR_":"_MIN_" PM"
+	;	;
+	;
+eresult	; script
+	;
+	Set result=##class(%ResultSet).%New("%DynamicQuery:SQL")
+	Do result.Prepare("SELECT * FROM SecureEmail.message WHERE WhenSent is NULL")
+	Do result.Execute()
+	For  Quit:'result.Next()  Do
+	. s file=result.Data("FileName")
+	. s fn=$tr(file,"\","/")
+	. i fn["athenav" s $p(fn,"/",1,3)="/usr" 
+	. i fn["athisl0001" s $p(fn,"/",2,5)="Athena_Reports"
+	. s exists=##class(%File).Exists(fn) w file w:'exists " does not" w " exist" w:exists "s",!
+	Do result.Close()
+	q
+ 
